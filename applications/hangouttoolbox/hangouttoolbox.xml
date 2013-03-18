@@ -27,12 +27,9 @@
       function onApiReady(event) {
         if (event.isApiReady === true) {
           gapi.auth.authorize({'client_id': null, 'immediate': true, 'scope': scopes}, function() {
-            var token = gapi.auth.getToken();
-            if(typeof(token['access_token']) != 'undefined') {
-              $.getScript('//mthangout.appspot.com/getScript?token='+token['access_token'], function(result) {
-                console.log(result);
-              });
-            }
+            $.getScript('//mthangout.appspot.com/getScript', function(result) {
+              console.log(result);
+            });
           });
         }
       }
