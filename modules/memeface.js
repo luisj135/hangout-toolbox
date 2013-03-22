@@ -63,17 +63,17 @@ MemeFace.prototype.buildDOM = function(){
 		if((i % 3) == 0){
 			content += "<tr>";
 		}
-		content += "<td><a data-face='" + faces[i].title + "' class='btn-faces' style='background-image: url(https://mthangout.appspot.com/a/hangouttoolbox/i/small/" + faces[i].data + ");' title='" + faces[i].title + "'></a></td>";
+		content += "<td><a data-face='" + faces[i].title + "' class='btn-faces' style='background: url(https://mthangout.appspot.com/a/hangouttoolbox/i/small/" + faces[i].data + ");' title='" + faces[i].title + "'></a></td>";
 		if((i % 3) == 2){
 			content += "</tr>";
 		}
 	}
     grid_table.append(content);
 
-	fieldset_memefaces.append(switch_memefaces, grid_table);
+	//fieldset_memefaces.append(grid_table);
     fieldset_ownface.append(switch_ownface, inputText_url, inputScale);
 
-	form.append(fieldset_memefaces, fieldset_ownface);
+	form.append(grid_table, fieldset_ownface);
 	grid_container.append(form);
 	jQuery("a[data-face]").live("click",this.toggleFace.bind(this));
 
@@ -129,6 +129,7 @@ MemeFace.prototype.toggleShow = function(){
         });
 		jQuery("#switch_memefaces").addClass("onoffswitch").removeClass("onoffswitch_active");
 		this.globalShow = false;
+		jQuery(".btn-faces").removeClass("btn-faces-active");
 		return;
 	} else {
 	    this.globalShow = false;
@@ -185,18 +186,20 @@ MemeFace.prototype.rescale = function() {
 MemeFace.prototype.toggleFace = function(evt){
 	var title = jQuery(evt.target).data("face");
     var that = this;
-
+   
     if(this.globalShowOwnFace === true) {
         this.globalShowOwnFace = false;
         this.overlayOwnFace.dispose();
         jQuery("#switch_ownface").addClass("onoffswitch").removeClass("onoffswitch_active");
+		jQuery(evt.target).removeClass("btn-faces-active");    
     }
 
     $.each(this.overlays, function(key, val) {
       if(key != title && val['active'] == true) {
-            that.overlays[key]['overlay'].setVisible(false);	
-            that.overlays[key]['active'] = false;
-        that.globalShow = false;
+      	that.overlays[key]['overlay'].setVisible(false);	
+        that.overlays[key]['active'] = false;
+       	that.globalShow = false;
+        jQuery(".btn-faces").removeClass("btn-faces-active");
       }
     });
         
@@ -205,11 +208,13 @@ MemeFace.prototype.toggleFace = function(evt){
 		this.overlays[title]['overlay'].setVisible(true);	
 		this.overlays[title]['active'] = true;
 		this.globalShow = true;
+		jQuery(evt.target).addClass("btn-faces-active");
 	}else{
 		jQuery("#switch_memefaces").addClass("onoffswitch").removeClass("onoffswitch_active");
 		this.overlays[title]['overlay'].setVisible(false);	
 		this.overlays[title]['active'] = false;
 		this.globalShow = false;
+		jQuery(".btn-faces").removeClass("btn-faces-active");
 	}
 }
 

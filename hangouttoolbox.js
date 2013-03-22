@@ -84,7 +84,7 @@
 		 * Create pane mainbody
 		*/
 		//var mainbody = div.clone().attr({"id": "mainbody"}).css({"height": (this.maxHeight-57)+"px"});
-		var mainbody = div.clone().attr({"id": "mainbody"}).css({"height": (this.maxHeight-156)+"px"});
+		var mainbody = div.clone().attr({"id": "mainbody"}).css({"height": (this.maxHeight-166)+"px"});
 
 		/*
 		 * Create Accordion

@@ -3,10 +3,10 @@
  * Main CSS for the App Layout
  *
 */
-body {color: #222; font: normal 13px arial,sans-serif; line-height: 18px;}
-#extension { background: white; border: 1px solid #D9D9D9; min-width: 300px; max-width: 300px;}
+body {color: #222; font: normal 13px arial,sans-serif; line-height: 18px; z-index: 0;}
+#extension { background: white; border: 0px solid #D9D9D9; min-width: 300px; max-width: 300px;}
 #footer {
-    background: #F3F3F3;
+    background: #F1F1F1;
     vertical-align: middle;
     font-size: 10px;
     line-height: 24px;
@@ -21,7 +21,7 @@ body {color: #222; font: normal 13px arial,sans-serif; line-height: 18px;}
 #footer a {
     font-size:10px;
     font-family:verdana;
-    color:#2e2e2e;
+    color:#222;
     text-decoration:none;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -33,10 +33,11 @@ body {color: #222; font: normal 13px arial,sans-serif; line-height: 18px;}
 #footer a:hover {text-decoration:underline; padding-bottom: 5px; margin-bottom: 5px;}
 .version {font-size: 9px; float:right; margin-right: 5px;}
 #header {
-    background: #F3F3F3;
-    font-size: 11px;
-    line-height: 24px;
-    font-weight: bold;
+    background: #F1F1F1;
+    font-size: 18px;
+    line-height: 35px;
+    font-weight: normal;
+    font-family: Arial;
     border-bottom: 1px solid #D9D9D9;
     padding: 0 10px;
     -webkit-touch-callout: none;
@@ -46,14 +47,14 @@ body {color: #222; font: normal 13px arial,sans-serif; line-height: 18px;}
     -ms-user-select: none;
     user-select: none;
 }
-#mainbody {overflow-y:hidden; padding-top: 0px; padding-bottom: 0px; position: relative;}
+#mainbody {overflow-y:hidden; padding-top: 0px; padding-bottom: 0px; background-color: #FFF; position: relative;}
 .clear {clear: both;}
 .header-icon {
-    background-image: url('https://mthangout.appspot.com/a/hangouttoolbox/i/toolboxicon16.png');
-    height: 16px;
-    width: 16px;    
+    background-image: url('https://mthangout.appspot.com/a/hangouttoolbox/i/toolboxicon32.png');
+    height: 30px;
+    width: 30px;    
     position: absolute;
-    top: 7px;
+    top: 1px;
     left: 5px;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -63,8 +64,8 @@ body {color: #222; font: normal 13px arial,sans-serif; line-height: 18px;}
     user-select: none;
 }
 .header-title {
-    margin-left: 18px;
-    line-height: 28px;
+    margin-left: 35px;
+    line-height: 35px;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -164,8 +165,7 @@ body {color: #222; font: normal 13px arial,sans-serif; line-height: 18px;}
 #lowerthird-preset-list li {margin:5px;}
 form {margin-left: 5px; width: 270px;}
 form .box {
-    -webkit-border-radius: 4px;
-    background-color: #E9E9E9;
+    background-color: #FFF;
     border: 1px solid #ADADAD;
     padding: 5px;
     width:235px;
@@ -174,8 +174,7 @@ form .box {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), inset 0px 1px 0px rgba(255, 255, 255, 0.3);
 }
 form .box_select {
-    -webkit-border-radius: 4px;
-    background-color: #E9E9E9;
+    background-color: #FFF;
     border: 1px solid #ADADAD;
     padding: 5px;
     width:250px;
@@ -184,8 +183,7 @@ form .box_select {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), inset 0px 1px 0px rgba(255, 255, 255, 0.3);
 }
 form .box_text {
-    -webkit-border-radius: 4px;
-    background-color: #E9E9E9;
+    background-color: #FFF;
     border: 1px solid #ADADAD;
     padding: 5px;
     margin-bottom: 8px;
@@ -198,8 +196,7 @@ form .flag {
     margin-top: 8px;
 }
 form .box_text2 {
-    -webkit-border-radius: 4px;
-    background-color: #E9E9E9;
+    background-color: #FFF;
     border: 1px solid #ADADAD;
     padding: 5px;
     margin-bottom: 10px;
@@ -213,8 +210,8 @@ form .box_text2 {
 form fieldset {
     margin-top: 10px;
     padding-bottom: 10px;
+    background-color: #fff;
     border: 1px solid #bbb;
-    -webkit-border-radius: 4px;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -346,13 +343,14 @@ form .fieldrow {
     user-select: none;
 }
 .lowerthird-delete-preset {
-    background: transparent url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAD2SURBVHjaxFM7DoMwDH2pOESHHgDPcB223gKpAxK34EAMMIe1FCQOgFQxuflARVBSVepQS5Ht2PHn2RHMjF/ohB8p2gSZpprtyxEHX8dGTeMG0A5UlsD5rCSGvF55F4SpqpSm1GmCzPO3LXJy1LXllwvodoMsCpNVy2hbYBjCLRiaZ8u7Dng+QXlu9b4H7ncvBmKbwoYBWR4kaXv3YmAMyoEpjv2PdWUHcP1j1ECqFpyj777YA6Yss9KyuEeDaW0cCsCUJMDjYUE8kr5TNuOzC+JiMI5uz2rmJvNWvidwcJXXx8IAuwb6uMqrY2iVgzbx99/4EmAAarFu0IJle5oAAAAASUVORK5CYII=');
+    background: transparent url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAVCAQAAAADHm0dAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAACqjSMyAAAACXBIWXMAAABIAAAASABGyWs+AAAAKElEQVQoz2NgGGDAiCHyH5cMI4YSnCqYaO7W//jlSXDAqNIBVzrgAABA9AMaS4UKPgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxMi0wNi0yOFQxMzowMTowNy0wNzowMC/0kXgAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTEtMTEtMDNUMDk6MTk6MjYtMDc6MDBXNJteAAAAdHRFWHRzdmc6YmFzZS11cmkAZmlsZTovLy9Vc2Vycy9hbGNvci9Hb29nbGUlMjBEcml2ZS9VWEEvVVglMjBEZXNpZ24lMjBSZXNvdXJjZXMvR3JhcGhpY3MvdWktaWNvbnMvLi9nbWFpbC9TVkcvZGVsZXRlLnN2Z2pOm2kAAAAASUVORK5CYII=');
     width:16px;
-    height:16px;
+    height:18px;
     border: none;
     cursor: pointer;
     display: block;
     padding:0px 0px;
+    margin-top: -3px;
     float: right;
     text-decoration:none;
     -webkit-touch-callout: none;
@@ -491,10 +489,6 @@ img {border:0;}
     margin: 0px;
     height: 64px;
     width: 64px;
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
-    border-radius: 4px;
-    float: left;
     margin-left:5px;
     font-size: 12px;
     padding-top: 0px;
@@ -504,26 +498,37 @@ img {border:0;}
     font-weight: bold;
     cursor: pointer;
     display: block;
-    background-image: -webkit-linear-gradient(top,#FAFAFA,#CECECE);
-    background-image: -moz-linear-gradient(top,#FAFAFA,#CECECE);
-    background-image: -ms-linear-gradient(top,#FAFAFA,#CECECE);
-    background-image: -o-linear-gradient(top,#FAFAFA,#CECECE);
-    background-image: linear-gradient(top,#FAFAFA,#CECECE);
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    transform: scale(1,1);
+    -moz-transform: scale(1,1);
+    -webkit-transform: scale(1,1);
+    -ms-transform: scale(1,1);
+    -o-transform: scale(1,1);
+    transition: transform 0.15s ease;
+    -moz-transition: moz-transform 0.15s ease;
+    -webkit-transition: -webkit-transform 0.15s ease;
+    -o-transition: -o-transform 0.15s ease;
 }
 .btn-faces:hover {
-    background-color: #858585;
-    background-image: -webkit-gradient(linear,left top,left bottom,from(#858585),to(#F3F3F3));
-    background-image: -webkit-linear-gradient(top,#858585,#F3F3F3);
-    background-image: -moz-linear-gradient(top,#858585,#F3F3F3);
-    background-image: -ms-linear-gradient(top,#858585,#F3F3F3);
-    background-image: -o-linear-gradient(top,#858585,#F3F3F3);
-    background-image: linear-gradient(top,#858585,#F3F3F3);
+    z-index: 999;
+    transform: scale(1.25,1.25);
+    -moz-transform: scale(1.25,1.25);
+    -webkit-transform: scale(1.25,1.25);
+    -ms-transform: scale(1.25,1.25);
+    -o-transform: scale(1.25,1.25);
+}
+
+.btn-faces-active {
+    transform: scale(1.25,1.25);
+    -moz-transform: scale(1.25,1.25);
+    -webkit-transform: scale(1.25,1.25);
+    -ms-transform: scale(1.25,1.25);
+    -o-transform: scale(1.25,1.25);
 }
 
 /*
