@@ -41,9 +41,9 @@ MemeFace.prototype.buildDOM = function(){
 	/*
 	 * Create pane body
 	*/
-	var fieldset_memefaces	= this.createElement("fieldset", {"class": "fieldset"});
+	var fieldset_memefaces	= this.createElement("fieldset").css({"border":"none"});
 	var fieldset_ownface	= this.createElement("fieldset", {"class": "fieldset"});
-	var legend_lowerthird	= this.createElement("legend", {"class": "legend"}).text("Meme Faces").appendTo(fieldset_memefaces);
+	var legend_lowerthird	= this.createElement("legend", {"class": "legend"}).text("").appendTo(fieldset_memefaces);
 	var legend_ownface  	= this.createElement("legend", {"class": "legend"}).text("URL Face").appendTo(fieldset_ownface);
 	var switch_memefaces	= this.createElement("a",{"id": "switch_memefaces", "class": "onoffswitch"});
 	var switch_ownface  	= this.createElement("a",{"id": "switch_ownface", "class": "onoffswitch"});
@@ -70,10 +70,10 @@ MemeFace.prototype.buildDOM = function(){
 	}
     grid_table.append(content);
 
-	//fieldset_memefaces.append(grid_table);
+	fieldset_memefaces.append(grid_table);
     fieldset_ownface.append(switch_ownface, inputText_url, inputScale);
 
-	form.append(grid_table, fieldset_ownface);
+	form.append(fieldset_memefaces, fieldset_ownface);
 	grid_container.append(form);
 	jQuery("a[data-face]").live("click",this.toggleFace.bind(this));
 
