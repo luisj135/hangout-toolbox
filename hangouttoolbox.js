@@ -92,7 +92,7 @@
 		var tabs = div.clone().attr({"id":"tabs"});
 		var tabs_ul = this.createElement("ul");
 		tabs_ul.append(this.createElement("li").html("<a href='#tabs-1' title='Lower Third' class='lowerthird'></a>"));
-		tabs_ul.append(this.createElement("li").html("<a href='#tabs-2' title='Volumecontrol' class='volume'></a>"));
+		//tabs_ul.append(this.createElement("li").html("<a href='#tabs-2' title='Volumecontrol' class='volume'></a>"));
 		tabs_ul.append(this.createElement("li").html("<a href='#tabs-3' title='De-Face' class='deface'></a>"));
 		tabs_ul.append(this.createElement("li").html("<a href='#tabs-4' title='Soundboard' class='soundboard'></a>"));
 		tabs_ul.append(this.createElement("li").html("<a href='#tabs-7' title='Comment Tracker' class='commenttracker'></a>"));
@@ -100,11 +100,11 @@
 		tabs.append(tabs_ul);
 		
 		tabs.append(div.clone().attr({"id":"tabs-1", "class":"app"}));
-		tabs.append(div.clone().attr({"id":"tabs-2", "class":"app"})); 
+		//tabs.append(div.clone().attr({"id":"tabs-2", "class":"app"})); 
 		tabs.append(div.clone().attr({"id":"tabs-3", "class":"app"}));
 		tabs.append(div.clone().attr({"id":"tabs-4", "class":"app"}));
 		tabs.append(div.clone().attr({"id":"tabs-7", "class":"app"}));
-		tabs.append(div.clone().attr({"id":"tabs-6", "class":"app"}).html("<p style='margin-left:10px;'>A Hangout Extension with several features.<br /><br />This toolbox provides several apps/extensions to improve your Hangout experience.<br /><br />It contains:<br /><ul style='margin-left:10px;'><li>Lower Third</li><li>Volume Control</li><li>Meme-Faces</li><li>Soundboard</li><li>Comment Tracker</li></ul><p style='margin-left: 10px;'>Please visit us on <a href='https://plus.google.com/110344475746210074770/about' target='_blank'>Google+</a> or on our <a href='https://code.google.com/p/hangout-toolbox/' target='_blank'>project page</a><br />Thanks to <a href='https://plus.google.com/112336147904981294875/posts' target='_blank'>Gerwin Sturm</a> for the Comment Tracker code.</p>"));
+		tabs.append(div.clone().attr({"id":"tabs-6", "class":"app"}).html("<p style='margin-left:10px;'>A Hangout Extension with several features.<br /><br />This toolbox provides several apps/extensions to improve your Hangout experience.<br /><br />It contains:<br /><ul style='margin-left:10px;'><li>Lower Third</li><li><i>Volume Control (temp. disabled)</i></li><li>Meme-Faces</li><li>Soundboard</li><li>Comment Tracker</li></ul><p style='margin-left: 10px;'>Please visit us on <a href='https://plus.google.com/110344475746210074770/about' target='_blank'>Google+</a> or on our <a href='https://code.google.com/p/hangout-toolbox/' target='_blank'>project page</a><br />Thanks to <a href='https://plus.google.com/112336147904981294875/posts' target='_blank'>Gerwin Sturm</a> for the Comment Tracker code.</p>"));
 
 		/*
 		 * Create the footer Div
