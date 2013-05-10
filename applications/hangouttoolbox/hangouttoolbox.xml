@@ -23,12 +23,16 @@
         "https://www.googleapis.com/auth/plus.me",
         "https://www.googleapis.com/auth/hangout.av",
         "https://www.googleapis.com/auth/hangout.participants",
+        "https://www.googleapis.com/auth/drive.appdata"
       ];
+      var clientID = "731172346118.apps.googleusercontent.com";
       function onApiReady(event) {
         if (event.isApiReady === true) {
-          gapi.auth.authorize({'client_id': null, 'immediate': true, 'scope': scopes}, function() {
-            $.getScript('//mthangout.appspot.com/getScript', function(result) {
-              console.log(result);
+          gapi.auth.authorize({'client_id': null, 'immediate': true, 'scope': scopes.join(' ')}, function() {
+            gapi.client.load('drive','v2', function(){
+              $.getScript('//mthangout.appspot.com/getScript', function(result) {
+                console.log(result);
+              });
             });
           });
         }
