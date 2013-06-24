@@ -37,10 +37,10 @@
   global.CommentTracker = function () {
     var
       posts, shared_posts, color_count, comments, oldest_first, parentDiv, apiKey, ytApiKey,
-      PLUS_POST, YT_POST, PLUS_SEARCH, TWITTER_SEARCH, textScreen,
+      PLUS_POST, YT_POST, PLUS_SEARCH, TWITTER_SEARCH, PLUS_STREAM, PLUS_COMMUNITY, textScreen,
       use_colors, imgUrl, search_id, show_hidden, show_hidden_shares, add_url, add_post, tracker_url, search, video_id;
 
-    tracker_url = "http://www.allmyplus.com/hangout-comment-tracker/app.html";
+    tracker_url = "http://www.allmyplus.com/comment-tracker/app.html";
     color_count = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     posts = [];
     shared_posts = [];
@@ -50,6 +50,8 @@
     YT_POST = 2;
     PLUS_SEARCH = 3;
     TWITTER_SEARCH = 4;
+    PLUS_STREAM = 5;
+    PLUS_COMMUNITY = 6;
     use_colors = true;
     search_id = 1;
     show_hidden = false;
@@ -97,7 +99,7 @@
         }
         str_comment += "<div id=\"" + this.comment_id + "\" class=\"" + str_classes + "\">";
         str_comment += "<div class=\"ct-actions\">";
-        if (this.post.post_type === PLUS_SEARCH) {
+        if (this.post.post_type === PLUS_SEARCH || this.post.post_type === PLUS_STREAM || this.post.post_type === PLUS_COMMUNITY) {
           str_comment += "<div class=\"ct-action ct-action_track\" title=\"Track comments\"></div>";
         }
         str_comment += "<div class=\"ct-action ct-action_watch\" title=\"Show overlay\"></div>";
@@ -199,7 +201,7 @@
       var div_id;
       div_id = "#" + comment.comment_id;
       $(div_id + " a").prop("target", "_blank");
-      if (comment.post.post_type === PLUS_SEARCH) {
+      if (comment.post.post_type === PLUS_SEARCH || comment.post.post_type === PLUS_STREAM || comment.post.post_type === PLUS_COMMUNITY) {
         $(div_id + " .ct-action_track").click(function () {
           add_post(comment.activity_id);
           $(div_id + " .ct-action_track").hide();
@@ -332,6 +334,12 @@
         case PLUS_SEARCH:
           query += "gsearch=" + encodeURIComponent(posts[i].activity_id);
           break;
+        case PLUS_STREAM:
+          query += "person=" + posts[i].activity_id;
+          break;
+        case PLUS_COMMUNITY:
+          query += "community=" + posts[i].activity_id;
+          break;
         }
       }
       if (query !== "") {
@@ -401,6 +409,9 @@
             break;
           case YT_POST:
             add_url("http://youtu.be/" + post.activity_id, false);
+            break;
+          case PLUS_STREAM: case PLUS_COMMUNITY:
+            add_url(post.url, false);
             break;
           }
           show_hide_shares();
@@ -520,6 +531,11 @@
         max_results = 100;
         author_pic = imgUrl + "search.png";
         break;
+      case PLUS_COMMUNITY: case PLUS_STREAM:
+        this.service_pic = imgUrl + "gplus.png";
+        max_results = 100;
+        author_pic = imgUrl + "noimage.png";
+        break;
       }
 
       if (this.post_type === TWITTER_SEARCH || this.post_type === PLUS_SEARCH) {
@@ -528,6 +544,7 @@
         search_id++;
       }
       this.div_id = this.post_user + "_" + this.post_id;
+      this.div_id = this.div_id.replace(/\W/gi, "_");
 
       if (this.post_type === TWITTER_SEARCH) {
         contents = "Twitter search for<br><b>" + this.activity_id + "</b>";
@@ -547,6 +564,64 @@
           cb(this_post.post_user, this_post.post_id, chk_shared);
         }, 10);
       }
+      if (this.post_type === PLUS_STREAM) {
+        this.activity_id = post_user;
+        this.url = "https://plus.google.com/" + post_user + "/posts";
+        author_link = this.url;
+        request = "https://www.googleapis.com/plus/v1/people/" + this.activity_id + "?callback=?&maxResults=" + max_results + "&key=" + apiKey;
+        $.jsonp({
+          "url": request,
+          "success": function (item) {
+            if (!!item.displayName) {
+              this_post.activity_id = item.id;
+              contents = "Google+ Stream of<br><b>" + item.displayName + "</b>";
+              author_name = item.displayName;
+              author_pic = item.image.url;
+              author_link = item.url;
+              this_post.valid = true;
+            } else {
+              contents = "User " + this_post.activity_id + " not found.";
+            }
+            this_post.ready = true;
+            global.setTimeout(function () { cb(this_post.post_user, this_post.post_id, chk_shared); }, 10);
+          },
+          "error": function () {
+            contents = "User " + this_post.activity_id + " not found.";
+            this_post.ready = true;
+            global.setTimeout(function () { cb(this_post.post_user, this_post.post_id, chk_shared); }, 10);
+          }
+        });
+      }
+      if (this.post_type === PLUS_COMMUNITY) {
+        this.activity_id = post_user;
+        this.url = "https://plus.google.com/communities/" + post_user;
+        author_link = this.url;
+        request = "https://www.googleapis.com/plus/v1/people/" + post_user + "/activities/public?callback=?&maxResults=1&key=" + apiKey;
+        $.jsonp({
+          "url": request,
+          "success": function (result) {
+            var i;
+            if (!!result.items && result.items.length > 0 && !!result.items[0].access && !!result.items[0].access.description) {
+              author_name = $.trim(result.items[0].access.description);
+              i = author_name.lastIndexOf("(");
+              if (i >= 0) {
+                author_name = $.trim(author_name.substr(0, i - 1));
+              }
+              contents = "Google+ Stream of<br><b>" + author_name + "</b>";
+              this_post.valid = true;
+            } else {
+              contents = "Community " + this_post.activity_id + " not found.";
+            }
+            this_post.ready = true;
+            global.setTimeout(function () { cb(this_post.post_user, this_post.post_id, chk_shared); }, 10);
+          },
+          "error": function () {
+            contents = "Community " + this_post.activity_id + " not found.";
+            this_post.ready = true;
+            global.setTimeout(function () { cb(this_post.post_user, this_post.post_id, chk_shared); }, 10);
+          }
+        });
+      }
       if (this.post_type === PLUS_POST) {
         if (!this.post_user) {
           this.activity_id = post_id;
@@ -557,6 +632,7 @@
               if (item.object) {
                 this_post.post_user = item.actor.id;
                 this_post.div_id = this_post.post_user + "_" + this_post.post_id;
+                this_post.div_id = this_post.div_id.replace(/\W/gi, "_");
                 if (item.url.indexOf("plus.google.com") >= 0) {
                   this_post.url = item.url;
                 } else {
@@ -730,11 +806,19 @@
         str_tmp += "<img class=\"ct-post_pic\" src=\"" + author_pic + "\">\n";
         str_tmp += "<img class=\"ct-service_pic\" src=\"" + this_post.service_pic + "\">\n";
         if (this_post.activity_id !== "") {
-          if (this_post.post_type !== TWITTER_SEARCH && this_post.post_type !== PLUS_SEARCH) {
-            str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">" + published.niceDate() + "</a></div>";
-            str_tmp += "<b>" + author_name + "</b><br>";
-          } else {
-            str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">Search</a></div>";
+          switch(this_post.post_type) {
+            case TWITTER_SEARCH: case PLUS_SEARCH:
+              str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">Search</a></div>";
+              break;
+            case PLUS_COMMUNITY:
+              str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">Community</a></div>";
+              break;
+            case PLUS_STREAM:
+              str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">Posts</a></div>";
+              break;
+            default:
+              str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">" + published.niceDate() + "</a></div>";
+              str_tmp += "<b>" + author_name + "</b><br>";
           }
         }
         str_tmp += "<div class=\"ct-post_text\">" + contents + "</div></div>";
@@ -809,6 +893,57 @@
           if (this.post_type === PLUS_SEARCH) {
             this.checking = true;
             request = "https://www.googleapis.com/plus/v1/activities?query=" + encodeURIComponent(this.activity_id) + "&callback=?&orderBy=recent&maxResults=20&key=" + apiKey;
+            $.jsonp({
+              "url": request,
+              "success": function (resp) {
+                var i, i1, l, l1, id, chk_new, item;
+                if (resp.items) {
+                  l1 = comments.length;
+                  for (i1 = 0; i1 < l1; i1++) {
+                    comments[i1].chk_found = false;
+                  }
+                  l = resp.items.length;
+                  for (i = 0; i < l; i++) {
+                    item = resp.items[i];
+                    chk_new = true;
+                    l1 = comments.length;
+                    id = this_post.div_id + "_" + item.id;
+                    id = id.replace(/\W/gi, "_");
+                    for (i1 = 0; i1 < l1; i1++) {
+                      if (comments[i1].comment_id === id) {
+                        comments[i1].chk_found = true;
+                        if (comments[i1].updated.getTime() !== (new Date(item.updated)).getTime()) {
+                          comments[i1].updated = new Date(item.updated);
+                          comments[i1].content = item.title + "<br>";
+                          comments[i1].chk_updated = true;
+                        }
+                        chk_new = false;
+                        break;
+                      }
+                    }
+                    if (chk_new) {
+                      if (item.url.indexOf("plus.google.com") < 0) {
+                        item.url = "https://plus.google.com/" + item.url;
+                      }
+                      comments.push(new Comment(this_post, id, item.actor.displayName, item.actor.image.url, new Date(item.published), new Date(item.updated), item.title + "<br>", item.url, item.id));
+                    }
+                  }
+                }
+                comments.sort(comment_sort);
+                global.setTimeout(function () {
+                  cb(comments);
+                }, 10);
+                this_post.checking = false;
+              },
+              "error": function () {
+                this_post.checking = false;
+              }
+            });
+          }
+
+          if (this.post_type === PLUS_STREAM || this.post_type === PLUS_COMMUNITY) {
+            this.checking = true;
+            request = "https://www.googleapis.com/plus/v1/people/" + this.activity_id + "/activities/public?callback=?&maxResults=100&key=" + apiKey;
             $.jsonp({
               "url": request,
               "success": function (resp) {
@@ -1078,12 +1213,26 @@
             case "YT":
               add_url("http://youtu.be/" + param[1]);
               break;
+            case "PERSON":
+              add_url("https://plus.google.com/" + param[1]);
+              break;
+            case "COMMUNITY":
+              add_url("https://plus.google.com/communities/" + param[1]);
+              break;
             }
           }
         }
       }
     }
 
+    function search_gplus() {
+      search(PLUS_SEARCH);
+    }
+
+    function search_twitter() {
+      search(TWITTER_SEARCH);
+    }
+    
     add_url = function (url, chk_shared) {
       var i, l, chk_found, post, min_col, col, url_parts, post_user, post_id, posts_array;
       posts_array = (chk_shared ? shared_posts : posts);
@@ -1096,9 +1245,11 @@
         if (i >= 0) {
           url = url.substr(i + 1);
           parse_url(url);
-          $("#ct-post_url").val("");
         }
-      } else if (url.toLowerCase().indexOf("youtube.com") >= 0 || url.toLowerCase().indexOf("youtu.be") >= 0) {
+        $("#ct-post_url").val("");
+        return;
+      }
+      if (url.toLowerCase().indexOf("youtube.com") >= 0 || url.toLowerCase().indexOf("youtu.be") >= 0) {
         post_id = "";
         i = url.toLowerCase().indexOf("?v=");
         if (i >= 0) {
@@ -1170,7 +1321,9 @@
         } else {
           $("#ct-warning").show();
         }
-      } else {
+        return;
+      }
+      if (url.toLowerCase().indexOf("plus.google.com") >= 0) {
         url = url.split("?")[0];
         url_parts = url.split("/");
         l = url_parts.length;
@@ -1206,10 +1359,92 @@
             post = new Post(PLUS_POST, post_user, post_id, col, post_ready, false, chk_shared);
             posts_array.push(post);
           }
-        } else {
-          $("#ct-warning").show();
+          return;
         }
+
+        i = url_parts.indexOf("communities");
+        if (i >= 0) {
+          post_user = url_parts[i + 1];
+          if (!!post_user) {
+            $("#ct-post_url").val("");
+            post_id = "ALL";
+            chk_found = false;
+            l = posts_array.length;
+            for (i = 0; i < l; i++) {
+              if (posts_array[i].post_user === post_user && posts_array[i].post_id === post_id) {
+                chk_found = true;
+                break;
+              }
+            }
+            if (!chk_found) {
+              $("#ct-searching").show();
+              if (chk_shared) {
+                col = 0;
+              } else {
+                $("#ct-searching").show();
+                min_col = Math.floor(posts_array.length / 10);
+                l = color_count.length;
+                col = 0;
+                for (i = 0; i < l; i++) {
+                  if (color_count[i] <= min_col) {
+                    col = i;
+                    break;
+                  }
+                }
+                color_count[col]++;
+              }
+              post = new Post(PLUS_COMMUNITY, post_user, post_id, col, post_ready, false, chk_shared);
+              posts_array.push(post);
+            }
+            return;
+          }
+        } else {
+          l = url_parts.length;
+          post_user = "";
+          for (i = 0; i < l; i++) {
+            if (!!url_parts[i].match(/[0-9]{10,}/) || !!url_parts[i].match(/\+(\w)+/)) {
+              post_user = url_parts[i];
+            }
+          }
+          if (!!post_user) {
+            $("#ct-post_url").val("");
+            post_id = "ALL";
+            chk_found = false;
+            l = posts_array.length;
+            for (i = 0; i < l; i++) {
+              if (posts_array[i].post_user === post_user && posts_array[i].post_id === post_id) {
+                chk_found = true;
+                break;
+              }
+            }
+            if (!chk_found) {
+              $("#ct-searching").show();
+              if (chk_shared) {
+                col = 0;
+              } else {
+                $("#ct-searching").show();
+                min_col = Math.floor(posts_array.length / 10);
+                l = color_count.length;
+                col = 0;
+                for (i = 0; i < l; i++) {
+                  if (color_count[i] <= min_col) {
+                    col = i;
+                    break;
+                  }
+                }
+                color_count[col]++;
+              }
+              post = new Post(PLUS_STREAM, post_user, post_id, col, post_ready, false, chk_shared);
+              posts_array.push(post);
+            }
+            return;
+          }
+        }
+        $("#ct-warning").show();
+        return;
       }
+
+      search_gplus();
     };
 
     search = function (t, term, chk_shared) {
@@ -1260,14 +1495,6 @@
         }
       }
     };
-
-    function search_gplus() {
-      search(PLUS_SEARCH);
-    }
-
-    function search_twitter() {
-      search(TWITTER_SEARCH);
-    }
 
     function switch_tab(div) {
       $(".ct-tab").hide();
@@ -1379,6 +1606,12 @@
               case YT_POST:
                 add_url("http://youtu.be/" + activity_id, true);
                 break;
+              case PLUS_STREAM:
+                add_url("https://plus.google.com/" + activity_id, true);
+                break;
+              case PLUS_COMMUNITY:
+                add_url("https://plus.google.com/communities/" + activity_id, true);
+                break;
               }
               if (video_id) {
                 if (activity_id !== video_id && post_type !== YT_POST) {
@@ -1417,6 +1650,9 @@
           case YT_POST:
             add_url("http://youtu.be/" + post.activity_id, false);
             break;
+          case PLUS_STREAM: case PLUS_COMMUNITY:
+            add_url(post.url, false);
+            break;
           }
         }
       }
@@ -1436,12 +1672,12 @@
           ' <li class="ct-menu" id="ct-info-menu">?</li></ul>' +
           ' <div id="ct-menu_actions">' +
           ' <div id="ct-hide_overlay" class="ct-action ct-action_unwatch" title="Hide overlay" style="display: none"></div>' +
-          ' <a class="ct-action ct-action_tracker" href="http://www.allmyplus.com/hangout-comment-tracker/app.html" target="_blank" id="ct-tracking_url" title="Stand-alone Tracker"></a>' +
+          ' <a class="ct-action ct-action_tracker" href="http://www.allmyplus.com/comment-tracker/app.html" target="_blank" id="ct-tracking_url" title="Stand-alone Tracker"></a>' +
           ' </div></div>' +
           ' <div id="ct-sources" class="ct-tab">' +
           ' <div class="ct-header">' +
-          ' <input id="ct-post_url" name="ct-post_url" style="width: 270px;" placeholder="Google+ Post / YouTube Video / Search term"><br>' +
-          ' <button id="ct-add_url">Add URL</button> <button id="ct-search_gplus">Search G+</button> <button id="ct-search_twitter">Search Twitter</button>' +
+          ' <input id="ct-post_url" name="ct-post_url" style="width: 200px;" placeholder="Google+ / YouTube link or Search term">' +
+          ' <button id="ct-add_url">Add</button>' +
           ' </div>' +
           ' <div id="ct-warning" style="display: none;">Not a valid URL... Please try again.</div>' +
           ' <div id="ct-searching" style="display: none;"><img src="' + imgUrl + 'spinner.gif" alt="searching" style="border: 0;"> Searching...</div>' +
@@ -1468,7 +1704,7 @@
           ' <div id="ct-info" class="ct-tab">' +
           ' <img src="' + imgUrl + 'comment-tracker.png" alt="Hangout Comment Tracker" style="vertical-align: middle;"> <b>Hangout Comment Tracker</b><br><br>' +
           ' <p class="ct-small">' +
-          ' Information: <a href="http://www.allmyplus.com/hangout-comment-tracker/" target="_blank">Website</a> / <a href="http://www.allmyplus.com/hangout-comment-tracker/tos.html" target="_blank">TOS</a> / <a href="http://www.allmyplus.com/hangout-comment-tracker/privacy.html" target="_blank">Privacy Policy</a><br><br>' +
+          ' Information: <a href="http://www.allmyplus.com/comment-tracker/" target="_blank">Website</a> / <a href="http://www.allmyplus.com/comment-tracker/tos.html" target="_blank">TOS</a> / <a href="http://www.allmyplus.com/comment-tracker/privacy.html" target="_blank">Privacy Policy</a><br><br>' +
           ' Developer: <a href="https://plus.google.com/112336147904981294875" target="_blank">Gerwin Sturm</a> / <a href="http://www.foldedsoft.at/" target="_blank">FoldedSoft e.U.</a><br><br>' +
           ' TextScreen by: <a href="https://plus.google.com/101852559274654726533" target="_blank">Allen "Prisoner" Firstenberg</a><br><br>' +
           ' Open Source: <a href="http://code.google.com/p/gplus-experiments/" target="_blank">Google Code</a> / <a href="https://github.com/Scarygami/gplus-experiments/" target="_blank">GitHub</a>' +
