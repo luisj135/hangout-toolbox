@@ -1713,8 +1713,6 @@
       );
       textScreen = new global.TextScreen({background: imgUrl + "bg.png"});
       $("#ct-add_url").click(add_url);
-      $("#ct-search_gplus").click(search_gplus);
-      $("#ct-search_twitter").click(search_twitter);
       $("#ct-oldest_first").click(function () {
         oldest_first = $("#ct-oldest_first").prop("checked");
         resort_comments();
