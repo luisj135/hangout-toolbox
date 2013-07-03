@@ -20,14 +20,13 @@
   var $ = global.$;
 
   Date.prototype.niceDate = function () {
-    var y, m, d, h, min, sec, now;
+    var y, m, d, h, min, now;
     now = new Date();
     y = this.getFullYear().toString();
     m = (this.getMonth() + 1).toString();
     d = this.getDate().toString();
     h = this.getHours().toString();
     min = this.getMinutes().toString();
-    sec = this.getSeconds().toString();
     if (this.getFullYear() === now.getFullYear() && this.getMonth() === now.getMonth() && this.getDate() === now.getDate()) {
       return (h[1] ? h : "0" + h[0]) + ":" + (min[1] ? min : "0" + min[0]);
     }
@@ -37,7 +36,7 @@
   global.CommentTracker = function () {
     var
       posts, shared_posts, color_count, comments, oldest_first, parentDiv, apiKey, ytApiKey,
-      PLUS_POST, YT_POST, PLUS_SEARCH, TWITTER_SEARCH, PLUS_STREAM, PLUS_COMMUNITY, textScreen,
+      PLUS_POST, YT_POST, PLUS_SEARCH, TWITTER_WIDGET, PLUS_STREAM, PLUS_COMMUNITY, textScreen,
       use_colors, imgUrl, search_id, show_hidden, show_hidden_shares, add_url, add_post, tracker_url, search, video_id;
 
     tracker_url = "http://www.allmyplus.com/comment-tracker/app.html";
@@ -49,7 +48,7 @@
     PLUS_POST = 1;
     YT_POST = 2;
     PLUS_SEARCH = 3;
-    TWITTER_SEARCH = 4;
+    TWITTER_WIDGET = 4;
     PLUS_STREAM = 5;
     PLUS_COMMUNITY = 6;
     use_colors = true;
@@ -328,8 +327,8 @@
         case YT_POST:
           query += "yt=" + posts[i].activity_id;
           break;
-        case TWITTER_SEARCH:
-          query += "tsearch=" + encodeURIComponent(posts[i].activity_id);
+        case TWITTER_WIDGET:
+          query += "twitter=" + encodeURIComponent(posts[i].activity_id);
           break;
         case PLUS_SEARCH:
           query += "gsearch=" + encodeURIComponent(posts[i].activity_id);
@@ -401,8 +400,8 @@
           case PLUS_POST:
             add_post(post.activity_id, false);
             break;
-          case TWITTER_SEARCH:
-            search(TWITTER_SEARCH, post.activity_id, false);
+          case TWITTER_WIDGET:
+            add_url("https://twitter.com/settings/widgets/" + post.activity_id, false);
             break;
           case PLUS_SEARCH:
             search(PLUS_SEARCH, post.activity_id, false);
@@ -410,7 +409,8 @@
           case YT_POST:
             add_url("http://youtu.be/" + post.activity_id, false);
             break;
-          case PLUS_STREAM: case PLUS_COMMUNITY:
+          case PLUS_STREAM:
+          case PLUS_COMMUNITY:
             add_url(post.url, false);
             break;
           }
@@ -526,34 +526,46 @@
         max_results = 20;
         author_pic = imgUrl + "search.png";
         break;
-      case TWITTER_SEARCH:
+      case TWITTER_WIDGET:
         this.service_pic = imgUrl + "twitter.png";
-        max_results = 100;
+        max_results = 20;
         author_pic = imgUrl + "search.png";
         break;
-      case PLUS_COMMUNITY: case PLUS_STREAM:
+      case PLUS_COMMUNITY:
+      case PLUS_STREAM:
         this.service_pic = imgUrl + "gplus.png";
         max_results = 100;
         author_pic = imgUrl + "noimage.png";
         break;
       }
 
-      if (this.post_type === TWITTER_SEARCH || this.post_type === PLUS_SEARCH) {
+      if (this.post_type === PLUS_SEARCH) {
         this.activity_id = post_id;
         this.post_id = search_id;
         search_id++;
       }
+      if (this.post_type === TWITTER_WIDGET) {
+        this.activity_id = post_id;
+      }
       this.div_id = this.post_user + "_" + this.post_id;
       this.div_id = this.div_id.replace(/\W/gi, "_");
 
-      if (this.post_type === TWITTER_SEARCH) {
-        contents = "Twitter search for<br><b>" + this.activity_id + "</b>";
-        this.url = "https://twitter.com/#!/search/" + encodeURIComponent(this.activity_id);
-        this.ready = true;
-        this.valid = true;
-        global.setTimeout(function () {
-          cb(this_post.post_user, this_post.post_id, chk_shared);
-        }, 10);
+      if (this.post_type === TWITTER_WIDGET) {
+        global.twitterFetcher.fetch(this.activity_id, "", 1, true, true, true, "", false, function (tweets, data, widgetdata) {
+          if (!!widgetdata) {
+            contents = widgetdata.title + "<br><br>";
+            this_post.url = widgetdata.url;
+            this_post.ready = true;
+            this_post.valid = true;
+          } else {
+            contents = "Twitter widget " + this_post.activity_id + " not found.<br><br>";
+            this_post.ready = true;
+            this_post.valid = false;
+          }
+          global.setTimeout(function () {
+            cb(this_post.post_user, this_post.post_id, chk_shared);
+          }, 10);
+        });
       }
       if (this.post_type === PLUS_SEARCH) {
         contents = "Google+ search for<br><b>" + this.activity_id + "</b>";
@@ -806,19 +818,20 @@
         str_tmp += "<img class=\"ct-post_pic\" src=\"" + author_pic + "\">\n";
         str_tmp += "<img class=\"ct-service_pic\" src=\"" + this_post.service_pic + "\">\n";
         if (this_post.activity_id !== "") {
-          switch(this_post.post_type) {
-            case TWITTER_SEARCH: case PLUS_SEARCH:
-              str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">Search</a></div>";
-              break;
-            case PLUS_COMMUNITY:
-              str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">Community</a></div>";
-              break;
-            case PLUS_STREAM:
-              str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">Posts</a></div>";
-              break;
-            default:
-              str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">" + published.niceDate() + "</a></div>";
-              str_tmp += "<b>" + author_name + "</b><br>";
+          switch (this_post.post_type) {
+          case TWITTER_WIDGET:
+          case PLUS_SEARCH:
+            str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">Search</a></div>";
+            break;
+          case PLUS_COMMUNITY:
+            str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">Community</a></div>";
+            break;
+          case PLUS_STREAM:
+            str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">Posts</a></div>";
+            break;
+          default:
+            str_tmp += "<div class=\"ct-post_time\"><a href=\"" + this_post.url + "\" target=\"_blank\">" + published.niceDate() + "</a></div>";
+            str_tmp += "<b>" + author_name + "</b><br>";
           }
         }
         str_tmp += "<div class=\"ct-post_text\">" + contents + "</div></div>";
@@ -992,47 +1005,38 @@
             });
           }
 
-          if (this.post_type === TWITTER_SEARCH) {
-            request = "https://search.twitter.com/search.json?q=" + encodeURIComponent(this_post.activity_id) + "&result_type=recent&rpp=" + max_results + "&callback=?";
-            this.checking = true;
-            $.jsonp({
-              "url": request,
-              "success": function (resp) {
-                var i, i1, l, l1, id, chk_new, item, url;
-                if (resp.results) {
+          if (this.post_type === TWITTER_WIDGET) {
+            global.twitterFetcher.fetch(this_post.activity_id, "", 20, true, true, true, "", false, function (tweets, data, widgetdata) {
+              var i, i1, l, l1, id, chk_new, item;
+              if (!!data) {
+                l1 = comments.length;
+                for (i1 = 0; i1 < l1; i1++) {
+                  comments[i1].chk_found = false;
+                }
+                l = data.length;
+                for (i = 0; i < l; i++) {
+                  item = data[i];
+                  chk_new = true;
                   l1 = comments.length;
+                  id = this_post.div_id + "_" + item.id;
+                  id = id.replace(/\W/gi, "_");
                   for (i1 = 0; i1 < l1; i1++) {
-                    comments[i1].chk_found = false;
+                    if (comments[i1].comment_id === id) {
+                      comments[i1].chk_found = true;
+                      chk_new = false;
+                      break;
+                    }
                   }
-                  l = resp.results.length;
-                  for (i = 0; i < l; i++) {
-                    item = resp.results[i];
-                    chk_new = true;
-                    l1 = comments.length;
-                    id = this_post.div_id + "_" + item.from_user_id_str + "_" + item.id_str;
-                    id = id.replace(/\W/gi, "_");
-                    url = "https://twitter.com/" + item.from_user + "/status/" + item.id_str;
-                    for (i1 = 0; i1 < l1; i1++) {
-                      if (comments[i1].comment_id === id) {
-                        comments[i1].chk_found = true;
-                        chk_new = false;
-                        break;
-                      }
-                    }
-                    if (chk_new) {
-                      comments.push(new Comment(this_post, id, item.from_user, item.profile_image_url_https, new Date(item.created_at), new Date(item.created_at), item.text + "<br>", url));
-                    }
+                  if (chk_new) {
+                    comments.push(new Comment(this_post, id, item.author.nickname + " (" + item.author.name + ")", item.author.image, item.datetime, item.datetime, item.tweet, item.url, item.id));
                   }
                 }
-                comments.sort(comment_sort);
-                global.setTimeout(function () {
-                  cb(comments);
-                }, 10);
-                this_post.checking = false;
-              },
-              "error": function () {
-                this_post.checking = false;
               }
+              comments.sort(comment_sort);
+              this_post.checking = false;
+              global.setTimeout(function () {
+                cb(comments);
+              }, 10);
             });
           }
 
@@ -1204,8 +1208,8 @@
             case "URL":
               add_url(param[1]);
               break;
-            case "TSEARCH":
-              search(TWITTER_SEARCH, param[1]);
+            case "TWITTER":
+              add_url("https://twitter.com/settings/widgets/" + param[1]);
               break;
             case "GSEARCH":
               search(PLUS_SEARCH, param[1]);
@@ -1229,15 +1233,11 @@
       search(PLUS_SEARCH);
     }
 
-    function search_twitter() {
-      search(TWITTER_SEARCH);
-    }
-    
     add_url = function (url, chk_shared) {
       var i, l, chk_found, post, min_col, col, url_parts, post_user, post_id, posts_array;
       posts_array = (chk_shared ? shared_posts : posts);
       $("#warning").hide();
-      if (!url || typeof (url) !== "string") {
+      if (!url || typeof url !== "string") {
         url = $.trim($("#ct-post_url").val());
       }
       if (url.toLowerCase().indexOf("allmyplus.com") >= 0) {
@@ -1247,6 +1247,45 @@
           parse_url(url);
         }
         $("#ct-post_url").val("");
+        return;
+      }
+      if (url.toLowerCase().indexOf("twitter.com/settings/widgets") >= 0) {
+        url = url.split("?")[0];
+        url_parts = url.split("/");
+        i = url_parts.indexOf("widgets") + 1;
+        if (i < url_parts.length) {
+          $("#ct-post_url").val("");
+          post_id = url_parts[i];
+          chk_found = false;
+          l = posts_array.length;
+          for (i = 0; i < l; i++) {
+            if (posts_array[i].post_user === "TW" && posts_array[i].post_id === post_id) {
+              chk_found = true;
+              break;
+            }
+          }
+          if (!chk_found) {
+            if (chk_shared) {
+              col = 0;
+            } else {
+              $("#ct-searching").show();
+              min_col = Math.floor(posts_array.length / 10);
+              l = color_count.length;
+              col = 0;
+              for (i = 0; i < l; i++) {
+                if (color_count[i] <= min_col) {
+                  col = i;
+                  break;
+                }
+              }
+              color_count[col]++;
+            }
+            post = new Post(TWITTER_WIDGET, "TW", post_id, col, post_ready, false, chk_shared);
+            posts_array.push(post);
+          }
+        } else {
+          $("#ct-warning").show();
+        }
         return;
       }
       if (url.toLowerCase().indexOf("youtube.com") >= 0 || url.toLowerCase().indexOf("youtu.be") >= 0) {
@@ -1450,7 +1489,7 @@
     search = function (t, term, chk_shared) {
       var i, l, chk_found, post, min_col, col, post_user, post_id, posts_array;
       posts_array = (chk_shared ? shared_posts : posts);
-      if (t !== TWITTER_SEARCH && t !== PLUS_SEARCH) {
+      if (t !== PLUS_SEARCH) {
         return;
       }
       $("#ct-warning").hide();
@@ -1458,9 +1497,6 @@
       $("#ct-post_url").val("");
       if (term && term !== "") {
         switch (t) {
-        case TWITTER_SEARCH:
-          post_user = "TW";
-          break;
         case PLUS_SEARCH:
           post_user = "PS";
           break;
@@ -1597,8 +1633,8 @@
               case PLUS_POST:
                 add_post(activity_id, true);
                 break;
-              case TWITTER_SEARCH:
-                search(TWITTER_SEARCH, activity_id, true);
+              case TWITTER_WIDGET:
+                add_url("https://twitter.com/settings/widgets/" + activity_id, true);
                 break;
               case PLUS_SEARCH:
                 search(PLUS_SEARCH, activity_id, true);
@@ -1641,8 +1677,8 @@
           case PLUS_POST:
             add_post(post.activity_id, false);
             break;
-          case TWITTER_SEARCH:
-            search(TWITTER_SEARCH, post.activity_id, false);
+          case TWITTER_WIDGET:
+            add_url("https://twitter.com/settings/widgets/" + post.activity_id, false);
             break;
           case PLUS_SEARCH:
             search(PLUS_SEARCH, post.activity_id, false);
@@ -1650,7 +1686,8 @@
           case YT_POST:
             add_url("http://youtu.be/" + post.activity_id, false);
             break;
-          case PLUS_STREAM: case PLUS_COMMUNITY:
+          case PLUS_STREAM:
+          case PLUS_COMMUNITY:
             add_url(post.url, false);
             break;
           }
@@ -1707,7 +1744,8 @@
           ' Information: <a href="http://www.allmyplus.com/comment-tracker/" target="_blank">Website</a> / <a href="http://www.allmyplus.com/comment-tracker/tos.html" target="_blank">TOS</a> / <a href="http://www.allmyplus.com/comment-tracker/privacy.html" target="_blank">Privacy Policy</a><br><br>' +
           ' Developer: <a href="https://plus.google.com/112336147904981294875" target="_blank">Gerwin Sturm</a> / <a href="http://www.foldedsoft.at/" target="_blank">FoldedSoft e.U.</a><br><br>' +
           ' TextScreen by: <a href="https://plus.google.com/101852559274654726533" target="_blank">Allen "Prisoner" Firstenberg</a><br><br>' +
-          ' Open Source: <a href="http://code.google.com/p/gplus-experiments/" target="_blank">Google Code</a> / <a href="https://github.com/Scarygami/gplus-experiments/" target="_blank">GitHub</a>' +
+          ' Twitter Post Fetcher by: <a href="https://plus.google.com/110804953626559077511/posts" target="_blank">Jason Mayes</a><br><br>' +
+          ' Open Source: <a href="https://github.com/Scarygami/comment_tracker" target="_blank">GitHub</a>' +
           ' </p>' +
           ' </div>'
       );
@@ -1782,4 +1820,309 @@
       initializeApp();
     };
   };
+
+  /*********************************************************************
+  *  #### Twitter Post Fetcher v9.0 ####
+  *  Coded by Jason Mayes 2013. A present to all the developers out there.
+  *  www.jasonmayes.com
+  *  Please keep this disclaimer with my code if you use it. Thanks. :-)
+  *  Got feedback or questions, ask here:
+  *  http://www.jasonmayes.com/projects/twitterApi/
+  *  Updates will be posted to this site.
+  *********************************************************************/
+  global.twitterFetcher = function () {
+    var domNode = '';
+    var maxTweets = 20;
+    var parseLinks = true;
+    var queue = [];
+    var inProgress = false;
+    var printTime = true;
+    var printUser = true;
+    var formatterFunction = null;
+    var supportsClassName = true;
+    var showRts = true;
+    var customCallbackFunction = null;
+
+    function handleTweets(tweets, jsondata, widgetdata){
+      if (customCallbackFunction == null) {
+        var x = tweets.length;
+        var n = 0;
+        var element = document.getElementById(domNode);
+        var html = '<ul>';
+        while(n < x) {
+          html += '<li>' + tweets[n] + '</li>';
+          n++;
+        }
+        html += '</ul>';
+        element.innerHTML = html;
+      } else {
+        customCallbackFunction(tweets, jsondata, widgetdata);
+      }
+    }
+
+    function strip(data) {
+      return data.replace(/<b[^>]*>(.*?)<\/b>/gi, function(a,s){return s;})
+          .replace(/class=".*?"|data-query-source=".*?"|dir=".*?"|rel=".*?"/gi, '');
+    }
+
+    function getElementsByClassName (node, classname) {
+      var a = [];
+      var regex = new RegExp('(^| )' + classname + '( |$)');
+      var elems = node.getElementsByTagName('*');
+      for (var i = 0, j = elems.length; i < j; i++) {
+          if(regex.test(elems[i].className)){
+            a.push(elems[i]);
+          }
+      }
+      return a;
+    };
+
+    function parseAuthorData(authorNode) {
+      var data = {}, tmp;
+
+      if (supportsClassName) {
+        tmp = authorNode.getElementsByClassName('avatar');
+      } else {
+        tmp = getElementsByClassName(authorNode, 'avatar');
+      }
+      if (tmp.length > 0) {
+        data.image = tmp[0].getAttribute('src');
+      }
+
+      if (supportsClassName) {
+        tmp = authorNode.getElementsByClassName('p-name');
+      } else {
+        tmp = getElementsByClassName(authorNode, 'p-name');
+      }
+      if (tmp.length > 0) {
+        if (tmp[0].innerText) {
+          data.name = tmp[0].innerText;
+        } else {
+          data.name = tmp[0].textContent;
+        }
+      }
+
+      if (supportsClassName) {
+        tmp = authorNode.getElementsByClassName('p-nickname');
+      } else {
+        tmp = getElementsByClassName(authorNode, 'p-nickname');
+      }
+      if (tmp.length > 0) {
+        if (tmp[0].innerText) {
+          data.nickname = tmp[0].innerText;
+        } else {
+          data.nickname = tmp[0].textContent;
+        }
+      }
+
+      if (data.nickname) {
+        data.url = "https://www.twitter.com/" + data.nickname.substring(1);
+      }
+
+      return data;
+    }
+
+    function parseWidgetData(node) {
+      var tmp;
+      if (supportsClassName) {
+        tmp = node.getElementsByClassName('summary');
+      } else {
+        tmp = getElementsByClassName(node, 'summary');
+      }
+      if (tmp.length > 0) {
+        tmp = tmp[0].getElementsByTagName('a');
+        if (tmp.length > 0) {
+          return {'url': tmp[0].href, 'title': tmp[0].getAttribute('title')};
+        }
+      }
+    }
+
+    return {
+      fetch: function(id, domId, maxNumberOfTweets, enableLinks, showUser, showTime, dateFunction, showRetweet, customCallback) {
+        if (maxNumberOfTweets === undefined) {
+          maxNumberOfTweets = 20;
+        }
+        if (enableLinks === undefined) {
+          parseLinks = true;
+        }
+        if (showUser === undefined) {
+          showUser = true;
+        }
+        if (showTime === undefined) {
+          showTime = true;
+        }
+        if (dateFunction === undefined) {
+          dateFunction = 'default';
+        }
+        if (showRetweet === undefined) {
+          showRetweet = true;
+        }
+        if (customCallback === undefined) {
+          customCallback = null;
+        }
+        if (inProgress) {
+          queue.push({"id":id, "domId":domId, "maxTweets":maxNumberOfTweets,
+              "enableLinks":enableLinks, "showUser":showUser,
+              "showTime":showTime, "dateFunction":dateFunction,
+              "showRt":showRetweet, "customCallback":customCallback});
+        } else {
+          inProgress = true;
+          domNode = domId;
+
+          maxTweets = maxNumberOfTweets;
+          parseLinks = enableLinks;
+          printUser = showUser;
+          printTime = showTime;
+          showRts = showRetweet;
+          formatterFunction = dateFunction;
+          customCallbackFunction = customCallback;
+          var script = document.createElement('script');
+          script.type = 'text/javascript';
+
+          script.src = 'https://cdn.syndication.twimg.com/widgets/timelines/' +
+              id + '?&lang=en&callback=twitterFetcher.callback&' +
+              'suppress_response_codes=true&rnd=' + Math.random();
+          document.getElementsByTagName('head')[0].appendChild(script);
+        }
+      },
+
+      callback: function(data) {
+        var div = document.createElement('div');
+        div.innerHTML = data.body;
+        if (typeof(div.getElementsByClassName) === 'undefined') {
+           supportsClassName = false;
+        }
+
+        var json = [];
+        var tweets = [];
+        var authors = [];
+        var times = [];
+        var rts = [];
+        var x = 0;
+        var widgetdata = parseWidgetData(div);
+
+        if (supportsClassName) {
+          var tmp = div.getElementsByClassName('tweet');
+          while (x < tmp.length) {
+            if (tmp[x].getElementsByClassName('retweet-credit').length > 0) {
+              rts.push(true);
+            } else {
+              rts.push(false);
+            }
+            if (!rts[x] || rts[x] && showRts) {
+              tweets.push(tmp[x].getElementsByClassName('e-entry-title')[0]);
+              authors.push(tmp[x].getElementsByClassName('p-author')[0]);
+              times.push(tmp[x].getElementsByClassName('dt-updated')[0]);
+              json.push({'id' : tmp[x].getAttribute('data-tweet-id')});
+            }
+            x++;
+          }
+        } else {
+          var tmp = getElementsByClassName(div, 'tweet');
+          while (x < tmp.length) {
+            if (getElementsByClassName(tmp[x], 'retweet-credit').length > 0) {
+              rts.push(true);
+            } else {
+              rts.push(false);
+            }
+            if (!rts[x] || rts[x] && showRts) {
+              tweets.push(getElementsByClassName(tmp[x], 'e-entry-title')[0]);
+              authors.push(getElementsByClassName(tmp[x], 'p-author')[0]);
+              times.push(getElementsByClassName(tmp[x], 'dt-updated')[0]);
+              json.push({'id' : tmp[x].getAttribute('data-tweet-id')});
+            }
+            x++;
+          }
+        }
+
+        if (tweets.length > maxTweets) {
+          tweets.splice(maxTweets, (tweets.length - maxTweets));
+          authors.splice(maxTweets, (authors.length - maxTweets));
+          times.splice(maxTweets, (times.length - maxTweets));
+          json.splice(maxTweets, (tweets.length - maxTweets));
+          rts.splice(maxTweets, (rts.length - maxTweets));
+        }
+
+        var arrayTweets = [];
+        var x = tweets.length;
+        var n = 0;
+        while(n < x) {
+          var newDate = new Date(times[n].getAttribute('datetime')
+              .replace(/-/g,'/').replace('T', ' ').split('+')[0]);
+          json[n].datetime = newDate;
+          json[n].author = parseAuthorData(authors[n]);
+          if (json[n].id && json[n].author.url) {
+            json[n].url = json[n].author.url + '/statuses/' + json[n].id;
+          }
+          if (typeof(formatterFunction) !== 'string') {
+            var dateString = formatterFunction(newDate);
+
+            times[n].setAttribute('aria-label', dateString);
+
+            if (tweets[n].innerText) {
+              // IE hack.
+              if (supportsClassName) {
+                times[n].innerText = dateString;
+              } else {
+                var h = document.createElement('p');
+                var t = document.createTextNode(dateString);
+                h.appendChild(t);
+                h.setAttribute('aria-label', dateString);
+                times[n] = h;
+              }
+            } else {
+              times[n].textContent = dateString;
+            }
+          }
+          if (parseLinks) {
+            var op = '';
+            json[n].tweet = strip(tweets[n].innerHTML);
+            if (printUser) {
+              op += '<div class="user">' + strip(authors[n].innerHTML) +
+                  '</div>';
+            }
+            op += '<p class="tweet">' + json[n].tweet + '</p>';
+            if (printTime) {
+              op += '<p class="timePosted">' +
+                  times[n].getAttribute('aria-label') + '</p>';
+            }
+            arrayTweets.push(op);
+          } else {
+            if (tweets[n].innerText) {
+              var op = '';
+              json[n].tweet = tweets[n].innerText;
+              if (printUser) {
+                op += '<p class="user">' + authors[n].innerText + '</p>';
+              }
+              op += '<p class="tweet">' +  tweets[n].innerText + '</p>';
+              if (printTime) {
+                op += '<p class="timePosted">' + times[n].innerText + '</p>';
+              }
+              arrayTweets.push(op);
+            } else {
+              var op = '';
+              json[n].tweet = tweets[n].textContent;
+              if (printUser) {
+                op += '<p class="user">' + authors[n].textContent + '</p>';
+              }
+              op += '<p class="tweet">' +  tweets[n].textContent + '</p>';
+              if (printTime) {
+                op += '<p class="timePosted">' + times[n].textContent + '</p>';
+              }
+              arrayTweets.push(op);
+            }
+          }
+          n++;
+        }
+        handleTweets(arrayTweets, json, widgetdata);
+        inProgress = false;
+        if (queue.length > 0) {
+          global.twitterFetcher.fetch(queue[0].id, queue[0].domId, queue[0].maxTweets,
+              queue[0].enableLinks, queue[0].showUser, queue[0].showTime,
+              queue[0].dateFunction, queue[0].showRt, queue[0].customCallback);
+          queue.splice(0,1);
+        }
+      }
+    }
+  }();
 }(this));
